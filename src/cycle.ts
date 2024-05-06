@@ -13,7 +13,7 @@ import {
   postUpgradeTree,
 } from './requests.js';
 import { globalState, NextTreeState, UserState } from './state.js';
-import { getToken, runPromisesWithDelay, wait } from './utils.js';
+import { getToken, wait } from './utils.js';
 
 export const showProfileState = async (): Promise<void> => {
   await getToken(async (token) => {
@@ -77,7 +77,7 @@ export const doDailyTasks = async (): Promise<void> => {
     }
 
     let stopInterval: boolean = false;
-    const claimKiwisHour = 4 * 60 * 60
+    const claimKiwisHour = 5 * 60 * 60
 
     while (stopInterval != true) {
       const currentUserState = globalState.getState<UserState>(token, 'user');
