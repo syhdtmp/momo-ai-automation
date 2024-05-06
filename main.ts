@@ -9,7 +9,6 @@ import {
   showProfileState,
 } from './src/cycle.js';
 
-let mainInterval: NodeJS.Timeout = null;
 let attempt: number = 0;
 
 console.log(`[+] Reading data file`);
@@ -72,7 +71,6 @@ const main = async (data: string): Promise<void> => {
 };
 
 process.on('SIGINT', () => {
-  clearInterval(mainInterval);
   console.log('Exiting process...');
   process.exit(0);
 });
