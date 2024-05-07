@@ -21,7 +21,6 @@ fs.readFile('data.json', 'utf8', async (err, data) => {
   const mainIntervalHour = 12 * 60 * 60;
   while (true) {
     await main(data);
-    await showProfileState()
     await wait(mainIntervalHour);
   }
 });
@@ -54,6 +53,7 @@ const main = async (data: string): Promise<void> => {
     await refreshState();
     await showProfileState();
     await doDailyTasks();
+    await showProfileState()
     await globalState.resetState();
 
     console.log(
