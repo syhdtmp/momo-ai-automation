@@ -96,7 +96,7 @@ const executeDailyTasks = async (stopInterval: boolean[]): Promise<void> => {
     if (obtainedCards > 0) {
       updateClaimedDailyAndCardsLeft(token, obtainedCards);
       await refreshState();
-      console.log(`[+] ${userState.name} - Claimed ${obtainedCards} kiwis`);
+      console.log(`[+] ${userState.name} - Claimed ${obtainedCards} cards`);
     } else {
       console.log(
         `[+] ${userState.name} - Claim chances used up, stopping kiwis claim soon`,
