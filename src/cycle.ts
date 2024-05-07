@@ -65,9 +65,24 @@ export const refreshState = async (): Promise<void> => {
 };
 
 export const doDailyTasks = async (): Promise<void> => {
+  const claimKiwisHour = 5 * 60 * 60; // 5 hours in seconds
+  let stopInterval: boolean[] = [];
+
+  do {
+    stopInterval = [];
+    await executeDailyTasks(stopInterval);
+    console.log(`[+] Waiting another ${claimKiwisHour / 3600} hours`);
+    await wait(claimKiwisHour);
+  } while (!stopInterval.every((condition) => condition == true));
+};
+
+const executeDailyTasks = async (stopInterval: boolean[]): Promise<void> => {
   await getToken(async (token) => {
     const userState = globalState.getState<UserState>(token, 'user');
+    let innerStopInterval: boolean = false;
+    console.log(`[+] ${userState.name} - Starting daily tasks`);
 
+    // Sign in
     const signedIn = await postSignIn(token);
     console.log(`[+] ${userState.name} - Doing daily sign in`);
     if (signedIn) {
@@ -76,83 +91,90 @@ export const doDailyTasks = async (): Promise<void> => {
       console.log(`[+] ${userState.name} - Already signed in`);
     }
 
-    let stopInterval: boolean = false;
-    const claimKiwisHour = 5 * 60 * 60
-
-    while (stopInterval != true) {
-      const currentUserState = globalState.getState<UserState>(token, 'user');
-      const claimLeft =
-        currentUserState.claimChances - currentUserState.claimedDaily;
-
-      const obtainedCards = await postClaimKiwis(token);
-      if (obtainedCards != 0) {
-        globalState.setState(token, 'user', {
-          claimedDaily: currentUserState.claimedDaily + 1,
-          cardsLeft: currentUserState.cardsLeft + obtainedCards,
-        });
-        console.log(
-          `[+] ${currentUserState.name} - ${currentUserState.claimedDaily}x claim kiwis (${claimLeft}x left)`,
-        );
-        await refreshState();
-      } else {
-        console.log(
-          `[+] ${userState.name} - Claim chances used up, stopping kiwis claim soon`,
-        );
-        stopInterval = true;
-      }
-
-      if (currentUserState.luckyBoxQuantities > 0) {
-        const openBox = await postOpenBox(token);
-        console.log(`[+] ${userState.name} - Doing daily open box`);
-        if (openBox) {
-          console.log(`[+] ${userState.name} - Daily open box completed`);
-        } else {
-          console.log(`[+] ${userState.name} - Already opened the box`);
-        }
-
-        const shareCards = await postShareCards(token);
-        console.log(`[+] ${userState.name} - Doing daily share`);
-        if (shareCards) {
-          console.log(`[+] ${userState.name} - Daily share completed`);
-        } else {
-          console.log(`[+] ${userState.name} - Already shared`);
-        }
-      }
-
-      const cardsLeft = globalState.getState<number>(token, 'user.cardsLeft');
-      for (let i = 0; i < cardsLeft; i++) {
-        const points = await postDrawCards(token, 1);
-        console.log(`[+] ${userState.name} - Draw cards get ${points} points`);
-        await wait(1)
-      }
-
+    // Claim Kiwis
+    const obtainedCards = await postClaimKiwis(token);
+    if (obtainedCards > 0) {
+      updateClaimedDailyAndCardsLeft(token, obtainedCards);
       await refreshState();
-      const nextTreeState = globalState.getState<NextTreeState>(
-        token,
-        'nextTree',
+      console.log(`[+] ${userState.name} - Claimed ${obtainedCards} kiwis`);
+    } else {
+      console.log(
+        `[+] ${userState.name} - Claim chances used up, stopping kiwis claim soon`,
       );
-
-      if (
-        globalState.getState<number>(token, 'user.currentPoints') >=
-        nextTreeState.upgradePoint
-      ) {
-        const upgradeTree = await postUpgradeTree(token);
-        console.log(`[+] ${userState.name} - Upgrading tree`);
-        if (upgradeTree) {
-          console.log(
-            `[+] ${userState.name} - Tree upgraded to level ${nextTreeState.nextLevel}`,
-          );
-        } else {
-          console.log(`[+] ${userState.name} - Unable to upgrade tree`);
-        }
-      }
-
-      if (stopInterval) {
-        console.log(`[+] ${userState.name} - Stopping kiwis claim`);
-      } else {
-        console.log(`[+] ${userState.name} - Waiting another 4 hours`);
-        await wait(claimKiwisHour)
-      }
+      innerStopInterval = true;
     }
+
+    // Open Box and Share Cards
+    await openBoxAndShareCards(token);
+
+    // Draw Cards
+    await drawCards(token);
+
+    // Upgrade Tree if possible
+    await upgradeTreeIfPossible(token);
+
+    // Log status
+    if (innerStopInterval) {
+      console.log(`[+] ${userState.name} - Stopping kiwis claim`);
+    }
+    stopInterval.push(innerStopInterval);
+  });
+};
+
+const openBoxAndShareCards = async (token: string): Promise<void> => {
+  const userState = globalState.getState<UserState>(token, 'user');
+  if (userState.luckyBoxQuantities > 0) {
+    const openBox = await postOpenBox(token);
+    console.log(`[+] ${userState.name} - Doing daily open box`);
+    if (openBox) {
+      console.log(`[+] ${userState.name} - Daily open box completed`);
+    } else {
+      console.log(`[+] ${userState.name} - Already opened the box`);
+    }
+
+    const shareCards = await postShareCards(token);
+    console.log(`[+] ${userState.name} - Doing daily share`);
+    if (shareCards) {
+      console.log(`[+] ${userState.name} - Daily share completed`);
+    } else {
+      console.log(`[+] ${userState.name} - Already shared`);
+    }
+  }
+};
+
+const drawCards = async (token: string): Promise<void> => {
+  const userState = globalState.getState<UserState>(token, 'user');
+  for (let i = 0; i < userState.cardsLeft; i++) {
+    const points = await postDrawCards(token, 1);
+    console.log(`[+] ${userState.name} - Draw cards get ${points} points`);
+    await wait(1);
+  }
+};
+
+const upgradeTreeIfPossible = async (token: string): Promise<void> => {
+  const userState = globalState.getState<UserState>(token, 'user');
+  const nextTreeState = globalState.getState<NextTreeState>(token, 'nextTree');
+
+  if (userState.currentPoints >= nextTreeState.upgradePoint) {
+    const upgradeTree = await postUpgradeTree(token);
+    console.log(`[+] ${userState.name} - Upgrading tree`);
+    if (upgradeTree) {
+      console.log(
+        `[+] ${userState.name} - Tree upgraded to level ${nextTreeState.nextLevel}`,
+      );
+    } else {
+      console.log(`[+] ${userState.name} - Unable to upgrade tree`);
+    }
+  }
+};
+
+const updateClaimedDailyAndCardsLeft = (
+  token: string,
+  obtainedCards: number,
+): void => {
+  const userState = globalState.getState<UserState>(token, 'user');
+  globalState.setState(token, 'user', {
+    claimedDaily: userState.claimedDaily + 1,
+    cardsLeft: userState.cardsLeft + obtainedCards,
   });
 };
