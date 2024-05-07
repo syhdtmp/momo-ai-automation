@@ -28,7 +28,7 @@ export const showProfileState = async (): Promise<void> => {
     console.log(`[-] Next Level Points ${nextTreeState.upgradePoint}`);
     console.log(`[-] Cards left ${userState.cardsLeft}`);
     console.log(`[-] Claimed kiwis ${userState.claimedKiwis}`);
-    console.log(`[-] Claimed daily ${userState.claimedDaily}`);
+    console.log(`[-] Claimed daily ${userState.drawCount}`);
     console.log(`--------------------------------------------------`);
   });
 };
@@ -100,10 +100,6 @@ const executeDailyTasks = async (stopInterval: boolean[]): Promise<void> => {
     // Claim Kiwis
     if (userState.drawCount < configState.maxDrawCount) {
       const obtainedCards = await postClaimKiwis(token);
-      globalState.setState(token, 'user', {
-        claimedDaily: userState.claimedDaily + 1,
-        cardsLeft: userState.cardsLeft + obtainedCards,
-      });
       await refreshState();
       console.log(`[+] ${userState.name} - Claimed ${obtainedCards} cards`);
     }
