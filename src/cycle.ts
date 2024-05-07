@@ -103,7 +103,9 @@ const executeDailyTasks = async (stopInterval: boolean[]): Promise<void> => {
       });
       await refreshState();
       console.log(`[+] ${userState.name} - Claimed ${obtainedCards} cards`);
-    } else {
+    }
+
+    if (userState.drawCount == configState.maxDrawCount) {
       console.log(
         `[+] ${userState.name} - Claim chances used up, stopping kiwis claim soon`,
       );
