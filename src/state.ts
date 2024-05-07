@@ -10,7 +10,7 @@ export type UserState = {
   luckiness?: number;
   solAddress?: string;
   totalClaimed?: number;
-  claimChances?: number;
+  drawCount?: number;
   cardsLeft?: number;
   currentPoints?: number;
   luckyBoxQuantities?: number;

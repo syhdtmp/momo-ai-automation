@@ -5,10 +5,12 @@ type ConfigState = {
   autoOpenBox?: boolean,
   autoClaim?: boolean,
   autoCheckIn?: boolean,
-  delaySeconds: number
+  delaySeconds: number,
+  maxDrawCount: number
 }
 
 export const configState: ConfigState = {
   baseUrl: 'https://api.momo.meme',
-  delaySeconds: 2
+  delaySeconds: 2,
+  maxDrawCount: 2
 }

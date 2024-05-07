@@ -84,14 +84,14 @@ export const getCurrentUserTree = async (token: string): Promise<UserState> => {
     return {
       claimedKiwis: 0,
       level: 0,
-      claimChances: 0,
+      drawCount: 0,
     };
   }
 
   _.merge(userState, {
     claimedKiwis: json['data']['claimedNumber'],
     level: json['data']['level'],
-    claimChances: json['data']['dailyClaimDrawCount'],
+    drawCount: json['data']['dailyClaimDrawCount'],
   });
 
   return userState;

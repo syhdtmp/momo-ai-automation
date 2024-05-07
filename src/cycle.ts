@@ -1,3 +1,4 @@
+import { configState } from './config.js';
 import {
   getCurrentCardsDetail,
   getCurrentUserBoxes,
@@ -71,8 +72,10 @@ export const doDailyTasks = async (): Promise<void> => {
   do {
     stopInterval = [];
     await executeDailyTasks(stopInterval);
-    console.log(`[+] Waiting another ${claimKiwisHour / 3600} hours`);
-    await wait(claimKiwisHour);
+    if (!stopInterval.every((condition) => condition == true)) {
+      console.log(`[+] Waiting another ${claimKiwisHour / 3600} hours`);
+      await wait(claimKiwisHour);
+    }
   } while (!stopInterval.every((condition) => condition == true));
 };
 
@@ -92,9 +95,12 @@ const executeDailyTasks = async (stopInterval: boolean[]): Promise<void> => {
     }
 
     // Claim Kiwis
-    const obtainedCards = await postClaimKiwis(token);
-    if (obtainedCards > 0) {
-      updateClaimedDailyAndCardsLeft(token, obtainedCards);
+    if (userState.drawCount < configState.maxDrawCount) {
+      const obtainedCards = await postClaimKiwis(token);
+      globalState.setState(token, 'user', {
+        claimedDaily: userState.claimedDaily + 1,
+        cardsLeft: userState.cardsLeft + obtainedCards,
+      });
       await refreshState();
       console.log(`[+] ${userState.name} - Claimed ${obtainedCards} cards`);
     } else {
@@ -106,12 +112,15 @@ const executeDailyTasks = async (stopInterval: boolean[]): Promise<void> => {
 
     // Open Box and Share Cards
     await openBoxAndShareCards(token);
+    await refreshState();
 
     // Draw Cards
     await drawCards(token);
+    await refreshState();
 
     // Upgrade Tree if possible
     await upgradeTreeIfPossible(token);
+    await refreshState();
 
     // Log status
     if (innerStopInterval) {
@@ -166,15 +175,4 @@ const upgradeTreeIfPossible = async (token: string): Promise<void> => {
       console.log(`[+] ${userState.name} - Unable to upgrade tree`);
     }
   }
-};
-
-const updateClaimedDailyAndCardsLeft = (
-  token: string,
-  obtainedCards: number,
-): void => {
-  const userState = globalState.getState<UserState>(token, 'user');
-  globalState.setState(token, 'user', {
-    claimedDaily: userState.claimedDaily + 1,
-    cardsLeft: userState.cardsLeft + obtainedCards,
-  });
 };
