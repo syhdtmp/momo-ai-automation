@@ -19,10 +19,13 @@ import { getToken, wait } from './utils.js';
 export const showProfileState = async (): Promise<void> => {
   await getToken(async (token) => {
     const userState = globalState.getState<UserState>(token, 'user');
+    const nextTreeState = globalState.getState<NextTreeState>(token, 'nextTree');
 
     console.log(`--------------------------------------------------`);
     console.log(`[-] Profile state ${userState.name}`);
     console.log(`[-] Level ${userState.level}`);
+    console.log(`[-] Current Points ${userState.currentPoints}`);
+    console.log(`[-] Next Level Points ${nextTreeState.upgradePoint}`);
     console.log(`[-] Cards left ${userState.cardsLeft}`);
     console.log(`[-] Claimed kiwis ${userState.claimedKiwis}`);
     console.log(`[-] Claimed daily ${userState.claimedDaily}`);
