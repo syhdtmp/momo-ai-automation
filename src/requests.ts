@@ -122,7 +122,7 @@ export const getNextTreeState = async (
   }
 
   _.merge(nextTreeState, {
-    claimedKiwis: json['data']['nextLevel'],
+    nextLevel: json['data']['nextLevel'],
     upgradePoint: json['data']['upgradePoint'],
   });
 
