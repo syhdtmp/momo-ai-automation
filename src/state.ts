@@ -3,7 +3,6 @@ import { getToken, wait } from './utils.js';
 
 export type UserState = {
   claimedKiwis?: number;
-  claimedDaily?: number;
   level?: number;
   invitationCode?: string;
   name?: string;
@@ -55,7 +54,6 @@ export const globalState = {
       const state: GlobalState = {
         nextTree: {},
         user: {
-          claimedDaily: 0,
         },
       };
       _.merge(globalState, {

@@ -11,6 +11,6 @@ type ConfigState = {
 
 export const configState: ConfigState = {
   baseUrl: 'https://api.momo.meme',
-  delaySeconds: 0.5,
+  delaySeconds: 1,
   maxDrawCount: 2
 }

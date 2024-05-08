@@ -148,9 +148,11 @@ const drawCards = async (token: string): Promise<void> => {
 
 const upgradeTreeIfPossible = async (token: string): Promise<void> => {
   const userState = globalState.getState<UserState>(token, 'user');
-  const nextTreeState = globalState.getState<NextTreeState>(token, 'nextTree');
 
   const upgradeTree = await postUpgradeTree(token);
+  await refreshState()
+
+  const nextTreeState = globalState.getState<NextTreeState>(token, 'nextTree');
   console.log(`[+] ${userState.name} - Upgrading tree`);
   if (upgradeTree) {
     console.log(
