@@ -18,10 +18,8 @@ fs.readFile('data.json', 'utf8', async (err, data) => {
     return;
   }
 
-  const mainIntervalHour = 12 * 60 * 60;
   while (true) {
     await main(data);
-    await wait(mainIntervalHour);
   }
 });
 
@@ -60,7 +58,7 @@ const main = async (data: string): Promise<void> => {
       `============================End Attempt-${attempt}============================`,
     );
     console.log(
-      `[Scheduled Task] [${currentTime}] Waiting for another 12 hours...`,
+      `[Scheduled Task] [${new Date().toLocaleString()}] Waiting for another 12 hours...`,
     );
     console.log(
       '=================================================================',

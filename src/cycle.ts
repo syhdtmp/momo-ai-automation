@@ -72,8 +72,8 @@ export const refreshState = async (): Promise<void> => {
 };
 
 export const doDailyTasks = async (): Promise<void> => {
-  const claimKiwisHour = 5 * 60 * 60; // 5 hours in seconds
-  let stopInterval: number = 2;
+  const claimKiwisHour = 0.5 * 60 * 60; // 5 hours in seconds
+  let stopInterval: number = 24;
 
   while (stopInterval > 0) {
     await executeDailyTasks();
@@ -142,7 +142,7 @@ const drawCards = async (token: string): Promise<void> => {
   for (let i = 0; i < userState.cardsLeft; i++) {
     const points = await postDrawCards(token, 1);
     console.log(`[+] ${userState.name} - Draw cards get ${points} points`);
-    await wait(1);
+    await wait(1.5);
   }
 };
 
