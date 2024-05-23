@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { postLogin } from './src/requests.js';
 import { globalState, tokens } from './src/state.js';
-import { killProcess, wait } from './src/utils.js';
+import { killProcess, prettyLog } from './src/utils.js';
 import {
   doDailyTasks,
   refreshState,
@@ -11,10 +11,11 @@ import {
 
 let attempt: number = 0;
 
-console.log(`[+] Reading data file`);
+prettyLog(`[+] Reading data file`, 'info');
+
 fs.readFile('data.json', 'utf8', async (err, data) => {
   if (err) {
-    console.error('Error reading file:', err);
+    prettyLog(`Error reading file: ${err.message}`, 'error');
     return;
   }
 
@@ -27,48 +28,43 @@ const main = async (data: string): Promise<void> => {
   try {
     attempt++;
     const jsonData: string[] = JSON.parse(data);
-    const currentTime = new Date().toLocaleString();
-    console.log(
-      `============================Attempt-${attempt}============================`,
-    );
-    console.log(
-      `[Scheduled Task] [${currentTime}] Executing code every 12 hours...`,
-    );
-    console.log(
-      '=================================================================',
-    );
+    const startTime = new Date();
+    const currentTime = startTime.toLocaleString('en-US', { timeZone: 'Asia/Jakarta', hour12: false  });
 
-    console.log(`[+] Found ${jsonData.length} user identity`);
+    prettyLog(`============================Attempt-${attempt}============================`, 'info');
+    prettyLog(`[Scheduled Task] [${currentTime}] Executing code...`, 'info');
+    prettyLog('=================================================================', 'info');
+
+    prettyLog(`[+] Found ${jsonData.length} user identities`, 'info');
 
     for (const [index, tgWebAppData] of jsonData.entries()) {
       const token = await postLogin(tgWebAppData);
       tokens.push(token);
     }
 
-    console.log(`[+] ${tokens.length} tokens generated`);
-    console.log(`[+] Getting profile state`);
+    prettyLog(`[+] ${tokens.length} tokens generated`, 'info');
+    prettyLog(`[+] Getting profile state`, 'info');
     await setProfileState();
     await refreshState();
     await showProfileState();
     await doDailyTasks();
-    await showProfileState()
+    await showProfileState();
     await globalState.resetState();
 
-    console.log(
-      `============================End Attempt-${attempt}============================`,
-    );
-    console.log(
-      `[Scheduled Task] [${new Date().toLocaleString()}] Waiting for another 12 hours...`,
-    );
-    console.log(
-      '=================================================================',
-    );
+    const endTime = new Date();
+    const elapsedTime = (endTime.getTime() - startTime.getTime()) / 1000; // Convert milliseconds to seconds
+    const endTimeString = endTime.toLocaleString('en-US', { timeZone: 'Asia/Jakarta', hour12: false });
+
+    prettyLog(`============================End Attempt-${attempt}============================`, 'info');
+    prettyLog(`[Scheduled Task] [${endTimeString}] Waiting for another 12 hours...`, 'info');
+    prettyLog(`[+] Elapsed time: ${elapsedTime} seconds`, 'info');
+    prettyLog('=================================================================', 'info');
   } catch (error) {
     killProcess(error);
   }
 };
 
 process.on('SIGINT', () => {
-  console.log('Exiting process...');
+  prettyLog('Exiting process...', 'info');
   process.exit(0);
 });

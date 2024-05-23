@@ -1,30 +1,40 @@
 import { tokens } from './state.js';
+import chalk from 'chalk';
 
 export const killProcess = (error: Error): void => {
-  console.log(`[ERROR] ${error.stack}`);
-  process.kill(process.pid, 'SIGINT');
+  console.error(`[ERROR] ${error.stack}`);
+  process.exit(1);
 };
 
 export const getToken = async (
   callback: (token: string, index: number) => Promise<void>,
 ): Promise<void> => {
-  for (const [index, token] of tokens.entries()) {
+  tokens.forEach(async (token, index) => {
     await callback(token, index + 1);
-  }
+  });
 };
 
-export const runPromisesWithDelay = <T>(
+export const runPromisesWithDelay = async <T>(
   promises: Promise<T>[],
   delay: number,
-): Promise<NodeJS.Timeout[]> => {
-  const delayedPromises = promises.map((promise: Promise<T>) =>
-    setTimeout(async (): Promise<void> => {
-      await promise;
-    }, delay),
-  );
+): Promise<void[]> => {
+  const delayedPromises = promises.map(async (promise: Promise<T>) => {
+    await new Promise(resolve => setTimeout(resolve, delay));
+  });
   return Promise.all(delayedPromises);
 };
 
 export const wait = (seconds: number): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
 };
+
+export function prettyLog(message: string, type: string = 'info'): void {
+  const timestamp = chalk.gray(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta', hour12: false }));
+  const logTypes = {
+    error: () => console.error(`[${timestamp}] ${chalk.red('[ERROR]')}: ${message}`),
+    warning: () => console.warn(`[${timestamp}] ${chalk.yellow('[WARNING]')}: ${message}`),
+    info: () => console.info(`[${timestamp}] ${chalk.blue('[INFO]')}: ${message}`)
+  };
+  (logTypes[type.toLowerCase()] || logTypes['info'])();
+}
+

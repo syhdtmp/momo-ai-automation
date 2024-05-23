@@ -14,7 +14,7 @@ import {
   postUpgradeTree,
 } from './requests.js';
 import { globalState, NextTreeState, UserState } from './state.js';
-import { getToken, wait } from './utils.js';
+import { getToken, wait, prettyLog } from './utils.js';
 
 export const showProfileState = async (): Promise<void> => {
   await getToken(async (token) => {
@@ -24,15 +24,15 @@ export const showProfileState = async (): Promise<void> => {
       'nextTree',
     );
 
-    console.log(`--------------------------------------------------`);
-    console.log(`[-] Profile state ${userState.name}`);
-    console.log(`[-] Level ${userState.level}`);
-    console.log(`[-] Current Points ${userState.currentPoints}`);
-    console.log(`[-] Next Level Points ${nextTreeState.upgradePoint}`);
-    console.log(`[-] Cards left ${userState.cardsLeft}`);
-    console.log(`[-] Claimed kiwis ${userState.claimedKiwis}`);
-    console.log(`[-] Claimed daily ${userState.drawCount}`);
-    console.log(`--------------------------------------------------`);
+    prettyLog(`--------------------------------------------------`, 'info');
+    prettyLog(`[-] Profile state ${userState.name}`, 'info');
+    prettyLog(`[-] Level ${userState.level}`, 'info');
+    prettyLog(`[-] Current Points ${userState.currentPoints}`, 'info');
+    prettyLog(`[-] Next Level Points ${nextTreeState.upgradePoint}`, 'info');
+    prettyLog(`[-] Cards left ${userState.cardsLeft}`, 'info');
+    prettyLog(`[-] Claimed kiwis ${userState.claimedKiwis}`, 'info');
+    prettyLog(`[-] Claimed daily ${userState.drawCount}`, 'info');
+    prettyLog(`--------------------------------------------------`, 'info');
   });
 };
 
@@ -79,7 +79,7 @@ export const doDailyTasks = async (): Promise<void> => {
     await executeDailyTasks();
     stopInterval--;
     if (stopInterval > 0) {
-      console.log(`[+] Waiting another ${claimKiwisHour / 3600} hours`);
+      prettyLog(`[+] Waiting another ${claimKiwisHour / 3600} hours`, 'info');
       await wait(claimKiwisHour);
     }
   }
@@ -88,21 +88,21 @@ export const doDailyTasks = async (): Promise<void> => {
 const executeDailyTasks = async (): Promise<void> => {
   await getToken(async (token) => {
     const userState = globalState.getState<UserState>(token, 'user');
-    console.log(`[+] ${userState.name} - Starting daily tasks`);
+    prettyLog(`[+] ${userState.name} - Starting daily tasks`, 'info');
 
     // Sign in
     const signedIn = await postSignIn(token);
-    console.log(`[+] ${userState.name} - Doing daily sign in`);
+    prettyLog(`[+] ${userState.name} - Doing daily sign in`, 'info');
     if (signedIn) {
-      console.log(`[+] ${userState.name} - Daily sign in completed`);
+      prettyLog(`[+] ${userState.name} - Daily sign in completed`, 'info');
     } else {
-      console.log(`[+] ${userState.name} - Already signed in`);
+      prettyLog(`[+] ${userState.name} - Already signed in`, 'info');
     }
 
     // Claim Kiwis
     const obtainedCards = await postClaimKiwis(token);
     await refreshState();
-    console.log(`[+] ${userState.name} - Claimed ${obtainedCards} cards`);
+    prettyLog(`[+] ${userState.name} - Claimed ${obtainedCards} cards`, 'info');
 
     // Open Box and Share Cards
     await openBoxAndShareCards(token);
@@ -121,19 +121,19 @@ const executeDailyTasks = async (): Promise<void> => {
 const openBoxAndShareCards = async (token: string): Promise<void> => {
   const userState = globalState.getState<UserState>(token, 'user');
   const openBox = await postOpenBox(token);
-  console.log(`[+] ${userState.name} - Doing daily open box`);
+  prettyLog(`[+] ${userState.name} - Doing daily open box`, 'info');
   if (openBox) {
-    console.log(`[+] ${userState.name} - Daily open box completed`);
+    prettyLog(`[+] ${userState.name} - Daily open box completed`, 'info');
   } else {
-    console.log(`[+] ${userState.name} - Already opened the box`);
+    prettyLog(`[+] ${userState.name} - Already opened the box`, 'info');
   }
 
   const shareCards = await postShareCards(token);
-  console.log(`[+] ${userState.name} - Doing daily share`);
+  prettyLog(`[+] ${userState.name} - Doing daily share`, 'info');
   if (shareCards) {
-    console.log(`[+] ${userState.name} - Daily share completed`);
+    prettyLog(`[+] ${userState.name} - Daily share completed`, 'info');
   } else {
-    console.log(`[+] ${userState.name} - Already shared`);
+    prettyLog(`[+] ${userState.name} - Already shared`, 'info');
   }
 };
 
@@ -141,7 +141,7 @@ const drawCards = async (token: string): Promise<void> => {
   const userState = globalState.getState<UserState>(token, 'user');
   for (let i = 0; i < userState.cardsLeft; i++) {
     const points = await postDrawCards(token, 1);
-    console.log(`[+] ${userState.name} - Draw cards get ${points} points`);
+    prettyLog(`[+] ${userState.name} - Draw cards get ${points} points`, 'info');
     await wait(1.5);
   }
 };
@@ -153,12 +153,10 @@ const upgradeTreeIfPossible = async (token: string): Promise<void> => {
   await refreshState()
 
   const nextTreeState = globalState.getState<NextTreeState>(token, 'nextTree');
-  console.log(`[+] ${userState.name} - Upgrading tree`);
+  prettyLog(`[+] ${userState.name} - Upgrading tree`, 'info');
   if (upgradeTree) {
-    console.log(
-      `[+] ${userState.name} - Tree upgraded to level ${nextTreeState.nextLevel}`,
-    );
+    prettyLog(`[+] ${userState.name} - Tree upgraded to level ${nextTreeState.nextLevel}`, 'info');
   } else {
-    console.log(`[+] ${userState.name} - Unable to upgrade tree`);
+    prettyLog(`[+] ${userState.name} - Unable to upgrade tree`, 'info');
   }
 };
