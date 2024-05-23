@@ -9,9 +9,9 @@ export const killProcess = (error: Error): void => {
 export const getToken = async (
   callback: (token: string, index: number) => Promise<void>,
 ): Promise<void> => {
-  tokens.forEach(async (token, index) => {
-    await callback(token, index + 1);
-  });
+  for (let index = 0; index < tokens.length; index++) {
+    await callback(tokens[index], index + 1);
+  }
 };
 
 export const runPromisesWithDelay = async <T>(
